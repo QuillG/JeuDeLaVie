@@ -23,8 +23,10 @@ L’utilisateur peut visualiser l’évolution du système en temps réel et int
 ### 🧩 Installation du projet
 
 ```bash
-# Cloner le dépôt
-git clone https://github.com/<TON_COMPTE>/JeuDeLaVie.git
+# Cloner le dépôt (https)
+git clone https://github.com/QuillG/JeuDeLaVie.git
+# Cloner le dépôt (ssh)
+git clone git@github.com:QuillG/JeuDeLaVie.git
 cd JeuDeLaVie
 
 # Installer les dépendances
