@@ -1,0 +1,25 @@
+{
+  "name": "jeu-de-la-vie",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.22"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "electron": "^38.4.0",
+    "electron-builder": "^26.0.12",
+    "vite": "^7.1.11",
+    "wait-on": "^9.0.1"
+  }
+}
