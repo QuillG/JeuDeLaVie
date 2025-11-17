@@ -80,31 +80,152 @@ function toggleCell(row, col) {
 }
 
 // 🟢 Recrée la grille quand la taille change
-watch(gridSize, (newSize) => {
+watch(gridSize, (newSize, oldSize) => {
+  newSize = Number(newSize)
+
   clearInterval(interval)
   isRunning.value = false
-  game = new GameOfLife(newSize, newSize)
-  grid.value = game.grid.map(row => [...row]) // ✅ clone proprement chaque ligne
+
+  const oldRows = game.rows
+  const oldCols = game.cols
+
+  game.rows = newSize
+  game.cols = newSize
+
+  const newGrid = Array.from({ length: newSize }, (_, r) =>
+    Array.from({ length: newSize }, (_, c) =>
+      (r < oldRows && c < oldCols) ? game.grid[r][c] : 0
+    )
+  )
+
+  game.grid = newGrid
+  grid.value = newGrid.map(row => [...row])
 })
 
-// 🟢 Recalcule la vitesse si on modifie le slider
+
 watch(speed, () => {
   if (isRunning.value) startLoop()
 })
 
-// 🧹 Nettoyage
 onUnmounted(() => clearInterval(interval))
+
+function exportRLE() {
+  const rows = game.grid.length
+  const cols = game.grid[0].length
+
+  let rle = ""
+
+  for (let r = 0; r < rows; r++) {
+    let count = 1
+    for (let c = 0; c < cols; c++) {
+      const current = game.grid[r][c]
+      const next = c + 1 < cols ? game.grid[r][c + 1] : null
+
+      if (current === next) {
+        count++
+      } else {
+        if (count > 1) rle += count
+        rle += current ? "o" : "b"
+        count = 1
+      }
+    }
+    if (r < rows - 1) rle += "$"
+  }
+
+  rle += "!"
+
+  const header = `x = ${cols}, y = ${rows}, rule = B3/S23\n`
+  const file = header + rle
+
+  const blob = new Blob([file], { type: "text/plain" })
+  const url = URL.createObjectURL(blob)
+
+  const a = document.createElement("a")
+  a.href = url
+  a.download = "grid.rle"
+  a.click()
+
+  URL.revokeObjectURL(url)
+}
+
+const fileInput = ref(null)
+
+function loadRLEFile(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const reader = new FileReader()
+
+  reader.onload = () => {
+    importRLE(reader.result)
+  }
+
+  reader.readAsText(file)
+}
+
+
+function importRLE(text) {
+  const lines = text.split("\n").filter(l => !l.startsWith("#"))
+
+  const header = lines.shift()
+  const match = header.match(/x\s*=\s*(\d+),\s*y\s*=\s*(\d+)/)
+
+  const cols = parseInt(match[1])
+  const rows = parseInt(match[2])
+
+  game = new GameOfLife(rows, cols)
+
+  let r = 0, c = 0
+  let data = lines.join("")
+
+  let number = ""
+
+  for (let char of data) {
+    if (/[0-9]/.test(char)) {
+      number += char
+    } else {
+      const n = number ? parseInt(number) : 1
+      number = ""
+
+      if (char === "o") {
+        for (let i = 0; i < n; i++) game.grid[r][c++] = 1
+      } else if (char === "b") {
+        for (let i = 0; i < n; i++) game.grid[r][c++] = 0
+      } else if (char === "$") {
+        r++
+        c = 0
+      } else if (char === "!") {
+        break
+      }
+    }
+  }
+
+  grid.value = [...game.grid]
+  gridSize.value = rows
+}
+
+
 </script>
 
 <template>
   <div class="game-container">
     <div class="controls">
-      <button @click="togglePlay">
-        <component :is="isRunning ? Pause : Play" />
-      </button>
-      <button @click="reset">
-        <RotateCcw />
-      </button>
+      <div class="buttons">
+        <button @click="togglePlay">
+          <component :is="isRunning ? Pause : Play" />
+        </button>
+        <button @click="reset">
+          <RotateCcw />
+        </button>
+        <button @click="exportRLE">
+          Export RLE
+        </button>
+        <input type="file" accept=".rle" @change="loadRLEFile" style="display:none" ref="fileInput" />
+
+        <button @click="fileInput.click()">
+          Import RLE
+        </button>
+      </div>
       <div class="sliders">
         <div class="slider-group">
           <label>Grille</label>
@@ -120,21 +241,13 @@ onUnmounted(() => clearInterval(interval))
       </div>
     </div>
 
-    <!-- 🟢 Grille -->
-    <div
-      class="grid"
-      :style="{
-        gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
-        gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`
-      }"
-    >
+    <div class="grid" :style="{
+      gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
+      gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`
+    }">
+
       <template v-for="(row, r) in grid" :key="r">
-        <div
-          v-for="(cell, c) in row"
-          :key="`${r}-${c}`"
-          :class="['cell', { alive: cell === 1 }]"
-          @click="toggleCell(r, c)"
-        ></div>
+        <div v-for="(cell, c) in row" :key="`${r}-${c}`" :class="['cell', { alive: cell === 1 }]" @click="toggleCell(r, c)"></div>
       </template>
     </div>
   </div>
@@ -155,7 +268,7 @@ onUnmounted(() => clearInterval(interval))
   border-radius: 8px;
   justify-content: flex-start;
   align-content: flex-start;
-  width: fit-content; 
+  width: fit-content;
   margin-top: 15px;
 }
 
@@ -223,5 +336,10 @@ input[type='range'] {
 button svg {
   width: 24px;
   height: 24px;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
 }
 </style>
