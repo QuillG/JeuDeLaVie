@@ -1,24 +1,33 @@
 {
   "name": "jeu-de-la-vie",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": "^20.19.0 || >=22.12.0"
-  },
+  "main": "electron/main.js",
+
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "concurrently \"npm run dev:vue\" \"npm run dev:electron\"",
+    "dev:vue": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+
+    "build:vue": "vite build",
+    "dist": "npm run build:vue && electron-builder",
+    "start": "electron ."
   },
+
+  "build": {
+    "extends": "./electron-builder.yml"
+  },
+
   "dependencies": {
     "lucide-vue-next": "^0.546.0",
     "vue": "^3.5.22"
   },
+
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
     "concurrently": "^9.2.1",
-    "electron": "^38.4.0",
+    "electron": "^39.2.1",
     "electron-builder": "^26.0.12",
     "vite": "^7.1.11",
     "wait-on": "^9.0.1"
