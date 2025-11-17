@@ -1,43 +1,87 @@
 <script setup>
 import { patterns } from '../core/patterns'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const selected = ref(null)
-const emit = defineEmits(['selectPattern'])
+const saved = ref([])
 
+const emit = defineEmits(['selectPattern', 'selectSavedPattern'])
+
+// Chargement des patterns sauvegardés
+onMounted(() => {
+  const raw = localStorage.getItem('savedPatterns')
+  if (raw) {
+    saved.value = JSON.parse(raw)
+  }
+})
+
+// Sauvegarde dans localStorage
+function persist() {
+  localStorage.setItem('savedPatterns', JSON.stringify(saved.value))
+}
+
+// Sélection d’un pattern normal
 function selectPattern(key) {
+  if (selected.value === key) {
+    selected.value = null
+    emit('selectPattern', null)
+    return
+  }
+
   selected.value = key
   emit('selectPattern', key)
 }
+
+// Sélection d’une sauvegarde
+function selectSaved(index) {
+  const key = 'saved-' + index
+
+  if (selected.value === key) {
+    selected.value = null
+    emit('selectSavedPattern', null)
+    return
+  }
+
+  selected.value = key
+  emit('selectSavedPattern', saved.value[index].cells)
+}
+
+
+// Fonction appelée par l’extérieur pour sauvegarder
+function saveUserPattern(cells) {
+  saved.value.push({
+    name: "Sauvegarde " + (saved.value.length + 1),
+    cells: cells
+  })
+
+  persist()
+}
+
+defineExpose({
+  saveUserPattern
+})
 </script>
 
 <template>
   <div class="panel">
-    <h2>🧬 Patterns</h2>
+    <h2>Patterns intégrés</h2>
 
     <div class="pattern-list">
-      <div
-        v-for="(pattern, key) in patterns"
-        :key="key"
-        class="pattern-item"
-        :class="{ selected: selected === key }"
-        @click="selectPattern(key)"
-      >
+      <div v-for="(pattern, key) in patterns" :key="key" class="pattern-item" :class="{ selected: selected === key }" @click="selectPattern(key)">
         <div class="mini-grid">
-          <div
-            v-for="(row, rowIndex) in pattern.cells"
-            :key="rowIndex"
-            class="mini-row"
-          >
-            <div
-              v-for="(cell, colIndex) in row"
-              :key="colIndex"
-              class="mini-cell"
-              :class="{ alive: cell === 1 }"
-            ></div>
+          <div v-for="(row, r) in pattern.cells" :key="r" class="mini-row">
+            <div v-for="(cell, c) in row" :key="c" class="mini-cell" :class="{ alive: cell === 1 }"></div>
           </div>
         </div>
         <p>{{ pattern.name }}</p>
+      </div>
+    </div>
+
+    <h2 style="margin-top: 20px;">Mes sauvegardes</h2>
+
+    <div class="pattern-list">
+      <div v-for="(item, index) in saved" :key="'saved_' + index" class="pattern-item" :class="{ selected: selected === 'saved-' + index }" @click="selectSaved(index)">
+        <p>{{ item.name }}</p>
       </div>
     </div>
   </div>
@@ -45,7 +89,7 @@ function selectPattern(key) {
 
 <style scoped>
 .panel {
-  width: 220px;
+  width: 300px;
   background: #1e1e1e;
   color: white;
   padding: 10px;
@@ -65,7 +109,6 @@ h2 {
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
-  max-height: calc(100vh - 80px);
 }
 
 .pattern-item {

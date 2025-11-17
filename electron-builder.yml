@@ -1,0 +1,27 @@
+directories:
+  output: build-release
+  buildResources: build
+
+appId: com.jeudelavie.app
+productName: JeuDeLaVie
+
+files:
+  - dist/**/*
+  - electron/**/*
+
+win:
+  icon: build/icon.ico
+  target:
+    - nsis
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  runAfterFinish: false
+  # script: build/installer.nsh 
+
+electronVersion: 39.2.1
