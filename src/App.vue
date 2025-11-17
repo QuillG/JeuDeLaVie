@@ -1,7 +1,16 @@
 <template>
   <div class="container">
-    <PatternPanel @selectPattern="onPatternSelected" />
-    <GameGrid :selectedPattern="selectedPattern" />
+    <PatternPanel
+      ref="patternPanelRef"
+      @selectPattern="onPatternSelected"
+      @selectSavedPattern="onSavedPatternSelected"
+    />
+
+    <GameGrid
+      :selectedPattern="selectedPattern"
+      :savedPattern="savedPattern"
+      @save-current-grid="onSaveCurrentGrid"
+    />
   </div>
 </template>
 
@@ -11,9 +20,22 @@ import PatternPanel from './components/PatternPanel.vue'
 import GameGrid from './components/GameGrid.vue'
 
 const selectedPattern = ref(null)
+const savedPattern = ref(null)
+const patternPanelRef = ref(null)
+
 
 function onPatternSelected(patternKey) {
+  savedPattern.value = null
   selectedPattern.value = patternKey
+}
+
+function onSavedPatternSelected(cells) {
+  selectedPattern.value = null
+  savedPattern.value = cells
+}
+
+function onSaveCurrentGrid(cells) {
+  patternPanelRef.value.saveUserPattern(cells)
 }
 </script>
 

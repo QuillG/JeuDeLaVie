@@ -8,6 +8,10 @@ const props = defineProps({
   selectedPattern: {
     type: String,
     default: null
+  },
+  savedPattern: {
+    type: Array,
+    default: null
   }
 })
 
@@ -17,8 +21,6 @@ const cellSize = 15
 const speed = ref(200)
 let game = new GameOfLife(gridSize.value, gridSize.value)
 const grid = ref(game.grid)
-
-// 🟢 Mode pas à pas (dev seulement)
 const isDev = import.meta.env.DEV
 const stepModeEnabled = ref(false)
 const iterations = ref([]) // tableau d'états pré-calculés (chaque état = tableau 2D)
@@ -33,9 +35,9 @@ const displayGrid = computed(() => {
   }
   return grid.value
 })
-
 let interval = null
 const isRunning = ref(false)
+const emit = defineEmits(["save-current-grid"])
 
 // 🟢 Gère une génération
 function next() {
@@ -67,7 +69,6 @@ function reset() {
   isRunning.value = false
   game.clear()
   grid.value = [...game.grid]
-  // Reset du mode pas à pas
   iterations.value = []
   currentIterationIndex.value = 0
   stepModeEnabled.value = false
@@ -120,18 +121,15 @@ watch(gridSize, (newSize, oldSize) => {
 
   game.grid = newGrid
   grid.value = newGrid.map(row => [...row])
-  // Invalide les itérations pré-calculées
   iterations.value = []
   currentIterationIndex.value = 0
   stepModeEnabled.value = false
 })
 
-// 🟢 Recalcule la vitesse si on modifie le slider
+
 watch(speed, () => {
   if (isRunning.value) startLoop()
 })
-
-// 🟢 Invalider le mode pas à pas si on change de pattern sélectionné (avant placement)
 watch(() => props.selectedPattern, () => {
   iterations.value = []
   currentIterationIndex.value = 0
@@ -140,7 +138,22 @@ watch(() => props.selectedPattern, () => {
 
 onUnmounted(() => clearInterval(interval))
 
-// 🟢 Génération des itérations (mode pas à pas)
+watch(
+  () => props.savedPattern,
+  (cells) => {
+    if (!cells) return
+
+    const rows = cells.length
+    const cols = cells[0].length
+
+    game = new GameOfLife(rows, cols)
+    game.grid = JSON.parse(JSON.stringify(cells))
+
+    grid.value = [...game.grid]
+    gridSize.value = rows
+  }
+)
+
 async function generateIterations() {
   const count = Number(iterationCountInput.value)
   if (!Number.isFinite(count) || count <= 0) return
@@ -191,7 +204,6 @@ function exitStepMode() {
   iterations.value = []
   currentIterationIndex.value = 0
 }
-
 function exportRLE() {
   const rows = game.grid.length
   const cols = game.grid[0].length
@@ -287,6 +299,9 @@ function importRLE(text) {
   gridSize.value = rows
 }
 
+function saveCurrentGrid() {
+  emit("save-current-grid", grid.value)
+}
 
 </script>
 
@@ -308,6 +323,9 @@ function importRLE(text) {
         <button @click="fileInput.click()">
           Import RLE
         </button>
+        <button @click="saveCurrentGrid">
+          Sauvegarder la grille
+        </button>
       </div>
       <div class="sliders">
         <div class="slider-group">
@@ -322,19 +340,11 @@ function importRLE(text) {
           <span>{{ speed }} ms</span>
         </div>
       </div>
-
-      <!-- 🟢 Mode pas à pas (affiché uniquement en dev) -->
       <div v-if="isDev" class="step-mode">
         <h3>Mode pas à pas (dev)</h3>
         <div class="step-config">
           <label>Itérations à générer</label>
-          <input
-            type="number"
-            min="1"
-            :max="5000"
-            v-model="iterationCountInput"
-            :disabled="generating"
-          />
+          <input type="number" min="1" :max="5000" v-model="iterationCountInput" :disabled="generating" />
           <button @click="generateIterations" :disabled="generating">
             {{ generating ? 'Génération...' : 'Générer' }}
           </button>
@@ -344,20 +354,11 @@ function importRLE(text) {
         <div v-if="stepModeEnabled" class="step-navigation">
           <div class="nav-buttons">
             <button @click="prevIteration" :disabled="currentIterationIndex === 0">&lt;</button>
-            <button
-              @click="nextIteration"
-              :disabled="currentIterationIndex >= iterations.length - 1"
-            >&gt;</button>
+            <button @click="nextIteration" :disabled="currentIterationIndex >= iterations.length - 1">&gt;</button>
           </div>
           <div class="jump">
             <label>Aller à</label>
-            <input
-              type="number"
-              :min="0"
-              :max="iterations.length - 1"
-              :value="currentIterationIndex"
-              @change="jumpToIteration"
-            />
+            <input type="number" :min="0" :max="iterations.length - 1" :value="currentIterationIndex" @change="jumpToIteration" />
           </div>
           <div class="info">
             Itération: {{ currentIterationIndex }} / {{ iterations.length - 1 }}
@@ -366,21 +367,13 @@ function importRLE(text) {
       </div>
     </div>
 
-    <!-- 🟢 Grille -->
-    <div
-      class="grid"
-      :style="{
-        gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
-        gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`
-      }"
-    >
+    <div class="grid" :style="{
+      gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
+      gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`
+    }">
+
       <template v-for="(row, r) in displayGrid" :key="r">
-        <div
-          v-for="(cell, c) in row"
-          :key="`${r}-${c}`"
-          :class="['cell', { alive: cell === 1 }]"
-          @click="toggleCell(r, c)"
-        ></div>
+        <div v-for="(cell, c) in row" :key="`${r}-${c}`" :class="['cell', { alive: cell === 1 }]" @click="toggleCell(r, c)"></div>
       </template>
     </div>
   </div>
