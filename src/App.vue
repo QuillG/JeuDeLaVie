@@ -1,17 +1,26 @@
 <template>
-  <div>
-    <h1>Jeu de la Vie</h1>
-    <p>Bienvenue dans la version Vue + Electron</p>
+  <div class="container">
+    <PatternPanel @selectPattern="onPatternSelected" />
+    <GameGrid :selectedPattern="selectedPattern" />
   </div>
 </template>
 
 <script setup>
-// Pas besoin de logique ici pour tester
+import { ref } from 'vue'
+import PatternPanel from './components/PatternPanel.vue'
+import GameGrid from './components/GameGrid.vue'
+
+const selectedPattern = ref(null)
+
+function onPatternSelected(patternKey) {
+  selectedPattern.value = patternKey
+}
 </script>
 
-<style>
-h1 {
-  text-align: center;
-  margin-top: 2rem;
+<style scoped>
+.container {
+  display: flex;
+  height: 100vh;
+  background: #111;
 }
 </style>
