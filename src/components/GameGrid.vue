@@ -94,6 +94,25 @@ watch(speed, () => {
 
 // 🧹 Nettoyage
 onUnmounted(() => clearInterval(interval))
+
+
+function saveGrid() {
+  const data = {
+    size: gridSize.value,
+    grid: game.grid
+  }
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `grid_${gridSize.value}x${gridSize.value}.json`
+  a.click()
+
+  URL.revokeObjectURL(url)
+}
+
 </script>
 
 <template>
@@ -104,6 +123,9 @@ onUnmounted(() => clearInterval(interval))
       </button>
       <button @click="reset">
         <RotateCcw />
+      </button>
+      <button @click="saveGrid">
+        Sauvegarder
       </button>
       <div class="sliders">
         <div class="slider-group">
@@ -121,20 +143,12 @@ onUnmounted(() => clearInterval(interval))
     </div>
 
     <!-- 🟢 Grille -->
-    <div
-      class="grid"
-      :style="{
-        gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
-        gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`
-      }"
-    >
+    <div class="grid" :style="{
+      gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
+      gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`
+    }">
       <template v-for="(row, r) in grid" :key="r">
-        <div
-          v-for="(cell, c) in row"
-          :key="`${r}-${c}`"
-          :class="['cell', { alive: cell === 1 }]"
-          @click="toggleCell(r, c)"
-        ></div>
+        <div v-for="(cell, c) in row" :key="`${r}-${c}`" :class="['cell', { alive: cell === 1 }]" @click="toggleCell(r, c)"></div>
       </template>
     </div>
   </div>
@@ -155,7 +169,7 @@ onUnmounted(() => clearInterval(interval))
   border-radius: 8px;
   justify-content: flex-start;
   align-content: flex-start;
-  width: fit-content; 
+  width: fit-content;
   margin-top: 15px;
 }
 
