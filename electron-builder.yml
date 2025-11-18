@@ -24,4 +24,6 @@ nsis:
   runAfterFinish: false
   # script: build/installer.nsh 
 
+publish: null
+
 electronVersion: 39.2.1
