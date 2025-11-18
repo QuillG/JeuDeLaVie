@@ -38,7 +38,52 @@ jobs:
 
       # 6. Build Vue + Electron + NSIS
       - name: Build App
+        run: npm run distname: Release Electron App
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          RAW_TAG="${{ github.event.release.tag_name }}"
+          CLEAN_TAG="${RAW_TAG#v}"
+          echo "version=$CLEAN_TAG" >> $GITHUB_OUTPUT
+
+      - name: Sync package.json version with tag
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
         run: npm run dist
+
+      - name: Upload installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/*.exe
+          asset_name: JeuDeLaVie-${{ steps.version.outputs.version }}.exe
+          asset_content_type: application/octet-stream
+
 
       # 7. Upload EXE dans la release
       - name: Uploa
