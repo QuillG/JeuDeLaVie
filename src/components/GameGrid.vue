@@ -15,9 +15,10 @@ const props = defineProps({
   }
 })
 
-// 🟢 Paramètres de la grille
+// Paramètres de la grille
 const gridSize = ref(50)
-const cellSize = 15
+console.log("DPI =", window.devicePixelRatio);
+const cellSize = 15 / window.devicePixelRatio
 const speed = ref(200)
 let game = new GameOfLife(gridSize.value, gridSize.value)
 const grid = ref(game.grid)
@@ -39,13 +40,13 @@ let interval = null
 const isRunning = ref(false)
 const emit = defineEmits(["save-current-grid"])
 
-// 🟢 Gère une génération
+// Gère une génération
 function next() {
   game.nextGeneration()
   grid.value = [...game.grid]
 }
 
-// 🟢 Démarrer / Pause
+// Démarrer / Pause
 function togglePlay() {
   if (isRunning.value) {
     clearInterval(interval)
@@ -62,7 +63,7 @@ function startLoop() {
   isRunning.value = true
 }
 
-// 🟢 Réinitialiser
+// Réinitialiser
 function reset() {
   clearInterval(interval)
   interval = null
@@ -74,7 +75,7 @@ function reset() {
   stepModeEnabled.value = false
 }
 
-// 🟢 Cliquer sur une cellule
+// Cliquer sur une cellule
 function toggleCell(row, col) {
   if (props.selectedPattern) {
     const pattern = patterns[props.selectedPattern]
@@ -100,7 +101,7 @@ function toggleCell(row, col) {
   grid.value = [...game.grid]
 }
 
-// 🟢 Recrée la grille quand la taille change
+// Recrée la grille quand la taille change
 watch(gridSize, (newSize, oldSize) => {
   newSize = Number(newSize)
 
@@ -390,13 +391,14 @@ function saveCurrentGrid() {
 
 .grid {
   display: grid;
-  grid-gap: 0.5px;
+  gap: 0.5px;
   border-radius: 8px;
   justify-content: flex-start;
   align-content: flex-start;
-  width: fit-content;
   margin-top: 15px;
+  /* plus de width: fit-content; */
 }
+
 
 .cell {
   width: 15px;

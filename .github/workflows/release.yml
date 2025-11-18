@@ -1,0 +1,44 @@
+name: Release Electron App
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      # 1. Clone repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Extraire la version depuis le tag GITHUB (ex: v1.2.0 → 1.2.0)
+      - name: Extract version from tag
+        id: version
+        run: |
+          RAW_TAG="${{ github.event.release.tag_name }}"
+          CLEAN_TAG="${RAW_TAG#v}"   # retire le "v"
+          echo "version=$CLEAN_TAG" >> $GITHUB_OUTPUT
+
+      # 3. Mettre à jour package.json avec la version
+      - name: Sync package.json version with tag
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      # 4. NodeJS
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 5. Dépendances
+      - name: Install dependencies
+        run: npm install
+
+      # 6. Build Vue + Electron + NSIS
+      - name: Build App
+        run: npm run dist
+
+      # 7. Upload EXE dans la release
+      - name: Uploa
