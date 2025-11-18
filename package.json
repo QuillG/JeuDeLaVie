@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "run:all": "node cli/generateGrid.js 50 50 && node cli/cli.js grid.json"
   },
   "dependencies": {
     "vue": "^3.5.22"
