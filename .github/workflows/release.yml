@@ -1,0 +1,47 @@
+name: Release Electron App
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # FIX: PowerShell-friendly version extraction
+      - name: Extract version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $raw = "${{ github.event.release.tag_name }}"
+          $clean = $raw.TrimStart("v")
+          echo "version=$clean" >> $env:GITHUB_OUTPUT
+
+      - name: Sync package.json version with tag
+        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
+        run: npm run dist
+
+      - name: Upload installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: build-release/*.exe
+          asset_name: JeuDeLaVie-${{ steps.version.outputs.version }}.exe
+          asset_content_type: application/octet-stream
+
