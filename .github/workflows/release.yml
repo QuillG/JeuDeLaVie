@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # FIX: PowerShell-friendly version extraction
+      # Récupère la version depuis le tag (PowerShell friendly)
       - name: Extract version from tag
         id: version
         shell: pwsh
@@ -38,13 +38,10 @@ jobs:
       - name: List build files
         run: dir build-release
 
+      # Upload via softprops (car supporte *.exe)
       - name: Upload installer
-        uses: actions/upload-release-asset@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: build-release/*.exe
-          asset_name: JeuDeLaVie-${{ steps.version.outputs.version }}.exe
-          asset_content_type: application/octet-stream
-
+          files: build-release/*.exe
