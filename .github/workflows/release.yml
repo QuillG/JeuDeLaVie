@@ -12,12 +12,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # FIX: PowerShell-friendly version extraction
       - name: Extract version from tag
         id: version
+        shell: pwsh
         run: |
-          RAW_TAG="${{ github.event.release.tag_name }}"
-          CLEAN_TAG="${RAW_TAG#v}"
-          echo "version=$CLEAN_TAG" >> $GITHUB_OUTPUT
+          $raw = "${{ github.event.release.tag_name }}"
+          $clean = $raw.TrimStart("v")
+          echo "version=$clean" >> $env:GITHUB_OUTPUT
 
       - name: Sync package.json version with tag
         run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
