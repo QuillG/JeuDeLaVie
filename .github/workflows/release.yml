@@ -1,0 +1,51 @@
+name: Release Electron App
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Récupère la version depuis le tag (PowerShell friendly)
+      - name: Extract version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $raw = "${{ github.event.release.tag_name }}"
+          $clean = $raw.TrimStart("v")
+          echo "version=$clean" >> $env:GITHUB_OUTPUT
+
+      - name: Sync package.json version with tag
+        run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
+        run: npm run dist
+
+      - name: List build files
+        run: dir build-release
+
+      # Upload via softprops (car supporte *.exe)
+      - name: Upload installer
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: build-release/*.exe

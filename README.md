@@ -2,58 +2,60 @@
 
 ## Objectif du projet
 
-Ce projet a été réalisé dans le cadre du cours **Développement Natif – M2 DEV**.  
-L’objectif est de concevoir et distribuer une **application de bureau** multiplateforme (Windows, macOS, Linux), développée avec **Vue.js** pour l’interface et **Electron** pour l’exécution native.
+Application desktop développée en **Vue.js + Electron** dans le cadre du module **Développement Natif – M2 DEV**.
 
-L’application implémente le célèbre **Jeu de la Vie** de John Conway, un automate cellulaire où chaque cellule d’une grille évolue selon un ensemble de règles simples.  
-L’utilisateur peut visualiser l’évolution du système en temps réel et interagir avec la simulation.
+Elle implémente le **Jeu de la Vie** de John Conway : visualisation de la grille, évolution en temps réel, configuration personnalisée et sauvegardes.
 
 ---
 
-## Installation et exécution
+## ⚙️ Installation
 
-### Prérequis
-
+### 🔧 Prérequis
 - **Node.js 18+**
-- **npm** (ou **yarn**)
-- Système compatible avec Electron (Windows, macOS, Linux)
+- **npm**
+- Compatible Windows / macOS / Linux
 
----
-
-### Installation du projet
+### 📦 Installation du projet
 
 ```bash
-# Cloner le dépôt
-git clone https://github.com/QuillG/JeuDeLaVie.git
+git clone https://github.com/<TON_COMPTE>/JeuDeLaVie.git
 cd JeuDeLaVie
-
-# Installer les dépendances
 npm install
 ```
 
-### Exécution des versions
-Version 1 – CLI
+---
 
-La première version du projet fonctionne entièrement dans le terminal.
-Pour générer automatiquement une grille 50x50 puis lancer la simulation, utiliser la commande suivante :
+## 🚀 Lancer l’application
 
-```bash
-npm run run:all
-```
+### ▶️ Mode développement (avec debug)
 
-Cette commande exécute successivement :
-
-```bash
-node cli/generateGrid.js 50 50
-
-node cli/index.js grid.json
-```
-
-Versions 2 et 3 – Interface graphique (Vue.js / Electron)
-
-Les versions suivantes utilisent une interface Vue.js avec Electron.
-Pour lancer l’application en mode développement :
+Activation automatique du mode debug (pas-à-pas activé) :
 
 ```bash
 npm run dev
 ```
+
+- Vue + Electron en mode développement  
+- Rechargement à chaud  
+- Pas à pas
+
+---
+
+## 🏗️ Construire l’application (release)
+
+Pour générer l’installateur **.exe** (ou équivalent selon ton OS) :
+
+```bash
+npm run dist
+```
+
+Ce script réalise :
+
+1. Build Vue en mode production  
+2. Packaging Electron via `electron-builder`  
+3. Sortie du build final dans :
+
+```
+build-release/
+```
+

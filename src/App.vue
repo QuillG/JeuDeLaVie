@@ -1,17 +1,48 @@
 <template>
-  <div>
-    <h1>Jeu de la Vie</h1>
-    <p>Bienvenue dans la version Vue + Electron</p>
+  <div class="container">
+    <PatternPanel
+      ref="patternPanelRef"
+      @selectPattern="onPatternSelected"
+      @selectSavedPattern="onSavedPatternSelected"
+    />
+
+    <GameGrid
+      :selectedPattern="selectedPattern"
+      :savedPattern="savedPattern"
+      @save-current-grid="onSaveCurrentGrid"
+    />
   </div>
 </template>
 
 <script setup>
-// Pas besoin de logique ici pour tester
+import { ref } from 'vue'
+import PatternPanel from './components/PatternPanel.vue'
+import GameGrid from './components/GameGrid.vue'
+
+const selectedPattern = ref(null)
+const savedPattern = ref(null)
+const patternPanelRef = ref(null)
+
+
+function onPatternSelected(patternKey) {
+  savedPattern.value = null
+  selectedPattern.value = patternKey
+}
+
+function onSavedPatternSelected(cells) {
+  selectedPattern.value = null
+  savedPattern.value = cells
+}
+
+function onSaveCurrentGrid(cells) {
+  patternPanelRef.value.saveUserPattern(cells)
+}
 </script>
 
-<style>
-h1 {
-  text-align: center;
-  margin-top: 2rem;
+<style scoped>
+.container {
+  display: flex;
+  height: 100vh;
+  background: #111;
 }
 </style>
