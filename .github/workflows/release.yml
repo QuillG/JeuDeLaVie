@@ -2,7 +2,11 @@ name: Release Electron App
 
 on:
   release:
-    types: [published]
+    types:
+      - published
+
+permissions:
+  contents: write
 
 jobs:
   build-windows:
